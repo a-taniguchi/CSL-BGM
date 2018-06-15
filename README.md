@@ -1,7 +1,15 @@
 # Cross-Situational Learning with Bayesian Generative Models for Multimodal Category and Word Learning in Robots
-# (CSL-BGM)
+## Cross-Situational Learning with Bayesian Generative Model　(CSL-BGM)
 
 These source code can be used in both iCub simulator and real iCub.　　
+
+### Introduction
+Figure 1: This figure shows an overview of the cross-situational learning scenario as the focus of this study.
+The robot obtains multimodal information from multiple sensory-channels in a situation and estimates the relationships between words and sensory-channels.  
+<img src="https://github.com/a-taniguchi/CSL-BGM/blob/master/img/abstract.jpg" width="480px">
+
+Figure 2: This figure shows the procedure for obtaining and processing data.  
+<img src="https://github.com/a-taniguchi/CSL-BGM/blob/master/img/getting_data.jpg" width="640px">
 
 ---
 Abstract:  
