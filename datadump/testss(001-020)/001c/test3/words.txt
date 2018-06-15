@@ -1,0 +1,1 @@
+front,blue,box,grasp

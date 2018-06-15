@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/akira/Dropbox/iCub/work/iKin2/fwInvKinematics/main.cpp
+cmath
+-
+iostream
+-
+iomanip
+-
+yarp/os/Time.h
+-
+yarp/sig/Vector.h
+-
+yarp/math/Math.h
+-
+iCub/iKin/iKinFwd.h
+-
+iCub/iKin/iKinIpOpt.h
+-
+

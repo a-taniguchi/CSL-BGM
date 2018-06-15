@@ -1,0 +1,6 @@
+print "set pos 0 -40\n"
+print "set pos 1   0\n"
+print "set pos 2   0\n"
+print "set pos 3 -10\n"
+print "set pos 4   0\n"
+print "set pos 5   0\n"

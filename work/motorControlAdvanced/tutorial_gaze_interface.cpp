@@ -1,0 +1,446 @@
+// -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
+//
+// A tutorial on how to use the Gaze Interface.
+//
+// Author: Ugo Pattacini - <ugo.pattacini@iit.it>
+
+#include <yarp/os/Network.h>
+#include <yarp/os/RFModule.h>
+#include <yarp/os/RateThread.h>
+#include <yarp/os/Time.h>
+#include <yarp/sig/Vector.h>
+#include <yarp/math/Math.h>
+
+#include <yarp/dev/Drivers.h>
+#include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/GazeControl.h>
+#include <yarp/dev/PolyDriver.h>
+
+#include <gsl/gsl_math.h>
+
+#include <stdio.h>
+#include <deque>
+//#include <time.h>////
+
+#define CTRL_THREAD_PER     0.02        // [s]
+#define PRINT_STATUS_PER    1.0         // [s]
+#define STORE_POI_PER       3.0         // [s]
+#define SWITCH_STATE_PER    10.0        // [s]
+#define STILL_STATE_TIME    5.0         // [s]
+
+#define STATE_TRACK         0
+#define STATE_RECALL        1
+#define STATE_WAIT          2
+#define STATE_STILL         3
+
+using namespace std;
+using namespace yarp::os;
+using namespace yarp::dev;
+using namespace yarp::sig;
+using namespace yarp::math;
+
+char filename[64];
+char trialname[64];
+char trialname_tmp[64];
+Vector x;
+
+/*
+int GetRandom(int min,int max){
+    srand((unsigned int)time(NULL));
+    return min + (int)(rand()*(max-min+1.0)/(1.0+RAND_MAX));
+}
+
+double Uniform( void ){
+    srand((unsigned int)time(NULL));
+    return ((double)rand()+1.0)/((double)RAND_MAX+2.0);
+}
+
+double rand_normal( double mu, double sigma ){
+    srand((unsigned int)time(NULL));
+    double z=sqrt( -2.0*log(Uniform()) ) * sin( 2.0*M_PI*Uniform() );
+    return mu + sigma*z;
+ }
+*/
+
+
+class CtrlThread: public RateThread,
+                  public GazeEvent
+{
+protected:
+    PolyDriver        clientGaze;
+    //PolyDriver        clientTorso;
+    IGazeControl     *igaze;
+    IEncoders        *ienc;
+    IPositionControl *ipos;
+
+    int state;
+    int startup_context_id;
+
+    //Vector fp;
+
+    deque<Vector> poiList;
+
+    double t;
+    double t0;
+    double t1;
+    double t2;
+    double t3;
+    double t4;
+    int count;
+    int object_num;
+    int random_obj;
+    double target[2];
+    FILE *fp;
+
+    // the motion-done callback
+    virtual void gazeEventCallback()
+    {
+        Vector ang;
+        igaze->getAngles(ang);
+
+        fprintf(stdout,"Actual gaze configuration: (%s) [deg]\n",
+                ang.toString(3,3).c_str());
+
+        fprintf(stdout,"Moving the torso; see if the gaze is compensated ...\n");
+
+        // move the torso yaw
+        //double val;
+        //ienc->getEncoder(0,&val);
+        //ipos->positionMove(0,val>0.0?-30.0:30.0);
+
+        t4=t;
+        
+        // detach the callback
+        igaze->unregisterEvent(*this);
+        igaze->setStabilizationMode(true);
+
+        // switch state
+        state=STATE_STILL;
+    }
+
+public:
+    CtrlThread(const double period) : RateThread(int(period*1000.0))
+    {
+        // here we specify that the event we are interested in is
+        // of type "motion-done"
+        gazeEventParameters.type="motion-done";
+    }
+
+    virtual bool threadInit()
+    {
+        // open a client interface to connect to the gaze server
+        // we suppose that:
+        // 1 - the iCub simulator is running;
+        // 2 - the gaze server iKinGazeCtrl is running and
+        //     launched with the following options: "--from configSim.ini"
+        Property optGaze("(device gazecontrollerclient)");
+        optGaze.put("remote","/iKinGazeCtrl");
+        optGaze.put("local","/gaze_client");
+
+        if (!clientGaze.open(optGaze))
+            return false;
+
+        // open the view
+        clientGaze.view(igaze);
+
+        // latch the controller context in order to preserve
+        // it after closing the module
+        // the context contains the tracking mode, the neck limits and so on.
+        igaze->storeContext(&startup_context_id);
+
+        // set trajectory time:
+        igaze->setNeckTrajTime(0.8);
+        igaze->setEyesTrajTime(0.4);
+
+        // put the gaze in tracking mode, so that
+        // when the torso moves, the gaze controller 
+        // will compensate for it
+        igaze->setTrackingMode(true);
+        
+        igaze->setStabilizationMode(true);
+        // print out some info about the controller
+        Bottle info;
+        igaze->getInfo(info);
+        fprintf(stdout,"info = %s\n",info.toString().c_str());
+
+        //Property optTorso("(device remote_controlboard)");
+        //optTorso.put("remote","/icubSim/torso");
+        //optTorso.put("local","/torso_client");
+
+        //if (!clientTorso.open(optTorso))
+        //    return false;
+
+        // open the view
+        //clientTorso.view(ienc);
+        //clientTorso.view(ipos);
+        //ipos->setRefSpeed(0,10.0);
+
+        //fp.resize(3);
+
+        state=STATE_TRACK;
+
+        t=t0=t1=t2=t3=t4=Time::now();
+        
+        count=0;
+
+        return true;
+    }
+
+    virtual void afterStart(bool s)
+    {
+        if (s)
+            fprintf(stdout,"Thread started successfully\n");
+        else
+            fprintf(stdout,"Thread did not start\n");        
+    }
+
+    virtual void run()
+    {
+        t=Time::now();
+
+        //generateTarget();///////////////////////
+        //sprintf(filename,"/home/akira/Dropbox/iCub/datadump/%s/target_object.txt",trialname);//
+        if(count <= 1000 ){//(fp = fopen(filename, "r")) == NULL ){
+        //    fclose(fp);
+            //}
+
+            //if (count <= 1000){
+            // look at the target (streaming)
+            //igaze->lookAtFixationPoint(fp);
+            
+            //画像中の座標指定と、絶対座標系上での座標点の視点は、
+            //よりロバストな方を選択する。
+            sprintf(trialname,trialname_tmp);// = argv[1];使えない
+            //printf("trialname : %s\n",trialname);//ok
+            sprintf(filename,"/home/akira/Dropbox/iCub/datadump/%s/object_cam_point.txt",trialname);//
+            if( (fp = fopen(filename, "r")) == NULL){
+                printf("%s\n",filename);
+                printf("error.\n");
+            }
+            //printf("test:%s\n",filename);
+            fp = fopen(filename, "r");
+            fscanf(fp, "%d", &object_num);
+            fscanf(fp, "%d", &random_obj);
+            printf("%d,%d\n",object_num,random_obj);
+            int count2 = 0;
+            double buf[3];
+            //ファイルが終わるまで読み込む
+            while( (fscanf(fp,"%lf,%lf,%lf,%lf",&buf[0],&buf[1],&buf[2]) != EOF) || (count2 < object_num)){
+                printf("read:%d,%lf,%lf\n",(int)buf[0],buf[1],buf[2]);
+                if((int)buf[0] == random_obj){
+                    target[0] = buf[1];
+                    target[1] = buf[2];
+                    //target[2] = buf[3];// - 0.02;
+                }
+                count2++;
+            }
+            fclose(fp);
+            
+            printf("target object%d : %f, %f\n",random_obj,target[0],target[1]);
+            
+            int camSel=0;   // select the image plane: 0 (left), 1 (right)
+            Vector px(2);   // specify the pixel where to look
+            px[0]=target[0];//160;//160.0;
+            px[1]=target[1];//160;//120.0;
+            double z=1.0;   // distance [m] of the object from the image plane (extended to infinity): yes, you probably need to guess, but it works pretty robustly
+            //Vector x;
+                     
+            //int flag = 0;            
+            //if(flag == 0){
+            if((px[0] == 0 && px[1] == 0) || object_num == 0){
+                printf("non object\n");            
+            }
+            else{
+                //igaze->lookAtMonoPixel(camSel,px,z); // look!
+                if(count <= 1){
+                    igaze->get3DPoint(camSel,px,z,x);
+                }
+                igaze->lookAtFixationPoint(x);   
+            }            
+            count++;
+            //}
+            //flag = 1;
+            // some verbosity
+            printStatus();
+            
+            // we collect from time to time
+            // some interesting points (POI)
+            // where to look at soon afterwards
+            storeInterestingPoint();
+            
+            //if (t-t2>=SWITCH_STATE_PER)
+            //{
+            //   // switch state
+            //    state=STATE_RECALL;
+            //}
+        }
+        else{
+            //fclose(fp);
+            threadRelease();        
+            //    return 0;
+        }
+
+            /*
+              if (state==STATE_RECALL)
+              {
+            // pick up the first POI
+            // and clear the list
+            Vector ang=poiList.front();
+            poiList.clear();
+
+            fprintf(stdout,"Retrieving POI #0 ... (%s) [deg]\n",
+                    ang.toString(3,3).c_str());
+
+            // register the motion-done event, attaching the callback
+            // that will be executed as soon as the gaze is accomplished
+            igaze->registerEvent(*this);
+
+            // look at the chosen POI
+            //igaze->lookAtAbsAngles(ang);
+
+            // switch state
+            state=STATE_WAIT;
+        }
+
+        if (state==STATE_STILL)
+        {
+            if (t-t4>=STILL_STATE_TIME)
+            {
+                fprintf(stdout,"done\n");
+
+                t1=t2=t3=t;
+
+                // switch state
+                state=STATE_TRACK;
+            }
+        }
+            */
+    }
+
+    virtual void threadRelease()
+    {    
+        // we require an immediate stop
+        // before closing the client for safety reason
+        igaze->stopControl();
+
+        // it's a good rule to restore the controller
+        // context as it was before opening the module
+        igaze->restoreContext(startup_context_id);
+
+        clientGaze.close();
+        //clientTorso.close();
+    }
+
+    /*
+	void generateTarget()
+    {   
+        // translational target part: a circular trajectory
+        // in the yz plane centered in [-0.5,0.0,0.3] with radius=0.1 m
+        // and frequency 0.1 Hz
+        fp[0]=-0.5+0.1*sin(2.0*M_PI*0.1*(t-t0));
+        fp[1]=+0.0+0.0*cos(2.0*M_PI*0.1*(t-t0));
+        fp[2]=+0.0;//0.3-0.2;//*sin(2.0*M_PI*0.1*(t-t0));            
+    }
+    */
+
+    void storeInterestingPoint()
+    {
+        if (t-t3>=STORE_POI_PER)
+        {
+            Vector ang;
+
+            // we store the current azimuth, elevation
+            // and vergence wrt the absolute reference frame
+            // The absolute reference frame for the azimuth/elevation couple
+            // is head-centered with the robot in rest configuration
+            // (i.e. torso and head angles zeroed). 
+            igaze->getAngles(ang);
+
+            int numPOI=(int)poiList.size();
+            fprintf(stdout,"Storing POI #%d: (%s) [deg]\n",
+                    numPOI,ang.toString(3,3).c_str());
+
+            poiList.push_back(ang);
+
+            t3=t;
+        }
+    }
+
+    void printStatus()
+    {        
+        if (t-t1>=PRINT_STATUS_PER)
+        {
+            // we get the current fixation point in the
+            // operational space
+            Vector x;
+            igaze->getFixationPoint(x);
+
+            fprintf(stdout,"+++++++++\n");
+            //fprintf(stdout,"fp         [m] = (%s)\n",fp.toString(3,3).c_str());
+            fprintf(stdout,"x          [m] = (%s)\n",x.toString(3,3).c_str());
+            //fprintf(stdout,"norm(fp-x) [m] = %g\n",norm(fp-x));
+            fprintf(stdout,"---------\n\n");
+
+            t1=t;
+        }
+    }
+};
+
+
+
+class CtrlModule: public RFModule
+{
+protected:
+    CtrlThread *thr;
+
+public:
+    virtual bool configure(ResourceFinder &rf)
+    {
+        Time::turboBoost();
+
+        thr=new CtrlThread(CTRL_THREAD_PER);
+        if (!thr->start())
+        {
+            delete thr;
+            return false;
+        }
+
+        return true;
+    }
+
+    virtual bool close()
+    {
+        thr->stop();
+        delete thr;
+
+        return true;
+    }
+
+    virtual double getPeriod()    { return 1.0;  }
+    virtual bool   updateModule() { return true; }
+};
+
+
+
+int main(int argc, char *argv[])
+{
+    Network yarp;
+    if (!yarp.checkNetwork())
+    {
+        fprintf(stdout,"Error: yarp server does not seem available\n");
+        return 1;
+    }
+    
+    sprintf(trialname,argv[1]);// = argv[1];
+    printf("%s\n",trialname);
+
+    strcpy(trialname_tmp,trialname);
+
+    CtrlModule mod;
+    
+    ResourceFinder rf;
+    return mod.runModule(rf);
+}
+
+
+

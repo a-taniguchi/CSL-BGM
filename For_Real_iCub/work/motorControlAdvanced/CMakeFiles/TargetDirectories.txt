@@ -1,0 +1,2 @@
+/home/icub/Desktop/Akira/iCub/work/motorControlAdvanced/CMakeFiles/tutorial_cartesian_interface.dir
+/home/icub/Desktop/Akira/iCub/work/motorControlAdvanced/CMakeFiles/tutorial_gaze_interface.dir

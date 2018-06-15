@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/akira/Dropbox/iCub/work/motorControlAdvanced2/tutorial_gaze_interface.cpp
+yarp/os/Network.h
+-
+yarp/os/RFModule.h
+-
+yarp/os/RateThread.h
+-
+yarp/os/Time.h
+-
+yarp/sig/Vector.h
+-
+yarp/math/Math.h
+-
+yarp/dev/Drivers.h
+-
+yarp/dev/ControlBoardInterfaces.h
+-
+yarp/dev/GazeControl.h
+-
+yarp/dev/PolyDriver.h
+-
+gsl/gsl_math.h
+-
+stdio.h
+-
+deque
+-
+
