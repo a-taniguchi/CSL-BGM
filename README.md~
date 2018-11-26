@@ -1,9 +1,7 @@
 # Cross-Situational Learning with Bayesian Generative Models for Multimodal Category and Word Learning in Robots
 ## Cross-Situational Learning with Bayesian Generative Model　(CSL-BGM)
 
-These source code can be used in both iCub simulator and real iCub.  
-/For\_Real\_iCub/ : The folder for a real iCub robot  
-/For\_Simulator/ : The folder for iCub simulator  
+These source code can be used in both iCub simulator and real iCub.　　
 
 ### Introduction
 Figure 1: This figure shows an overview of the cross-situational learning scenario as the focus of this study.
@@ -17,9 +15,9 @@ Figure 2: This figure shows the procedure for obtaining and processing data.
 - Ubuntu 14.04  
 - iCub software and YARP  
 - ODE 0.13.1 and SDL  
-- Python 2.7.6 (numpy, scipy, scikit-learn)  
+- Python 2.7.6 (numpy,scipy,scikit-learn)  
 - OpenCV 3.1.0   
-- CNN feature extracter: Caffe (Reference model: Alex-net)  
+- CNN feature extracter: Caffe (Reference model:Alex-net)  
 
 ## How to install iCub softwere
 Plase see these sites.  
