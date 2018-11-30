@@ -1,7 +1,7 @@
 # Cross-Situational Learning with Bayesian Generative Models for Multimodal Category and Word Learning in Robots
-## Cross-Situational Learning with Bayesian Generative Model　(CSL-BGM)
+## Cross-Situational Learning with Bayesian Generative Model (CSL-BGM)
 
-These source code can be used in both iCub simulator and real iCub.  
+These source codes can be used in both iCub simulator and real iCub.  
 /For\_Real\_iCub/ : The folder for a real iCub robot  
 /For\_Simulator/ : The folder for iCub simulator  
 
@@ -33,7 +33,8 @@ Human infants can acquire word meanings by estimating the relationships among mu
 
 Keywords: Bayesian model, cross-situational learning, lexical acquisition, multimodal categorization, symbol grounding, word meaning
 
-Citation: Taniguchi A, Taniguchi T and Cangelosi A (2017) Cross-Situational Learning with Bayesian Generative Models for Multimodal Category and Word Learning in Robots. Front. Neurorobot. 11:66. doi: 10.3389/fnbot.2017.00066
+Citation:  
+Akira Taniguchi, Tadahiro Taniguchi, and Angelo Cangelosi. "Cross-Situational Learning with Bayesian Generative Models for Multimodal Category and Word Learning in Robots." Frontiers in Neurorobotics 11: 66 (2017). doi: 10.3389/fnbot.2017.00066
 
 Paper:  
 https://www.frontiersin.org/articles/10.3389/fnbot.2017.00066/full
