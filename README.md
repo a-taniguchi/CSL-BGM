@@ -34,7 +34,8 @@ Human infants can acquire word meanings by estimating the relationships among mu
 Keywords: Bayesian model, cross-situational learning, lexical acquisition, multimodal categorization, symbol grounding, word meaning
 
 Citation:  
-Akira Taniguchi, Tadahiro Taniguchi, and Angelo Cangelosi. "Cross-Situational Learning with Bayesian Generative Models for Multimodal Category and Word Learning in Robots." Frontiers in Neurorobotics 11: 66 (2017). doi: 10.3389/fnbot.2017.00066
+Akira Taniguchi, Tadahiro Taniguchi, and Angelo Cangelosi. "Cross-Situational Learning with Bayesian Generative Models for Multimodal Category and Word Learning in Robots." Frontiers in Neurorobotics 11: 66 (2017).  
+DOI: 10.3389/fnbot.2017.00066
 
 Paper:  
 https://www.frontiersin.org/articles/10.3389/fnbot.2017.00066/full
