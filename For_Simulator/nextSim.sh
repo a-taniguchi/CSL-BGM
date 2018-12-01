@@ -1,6 +1,6 @@
 #! /bin/sh
 
-#cd ~/Dropbox/iCub/
+#cd ~/iCub/
 
 echo -n "trialname?(output_folder) >"
 read bun
@@ -10,8 +10,8 @@ sleep 5
 gnome-terminal --command './headdown.sh'
 gnome-terminal --command './world.sh'
 
-mkdir ~/Dropbox/iCub/datadump/$bun
-mkdir ~/Dropbox/iCub/datadump/$bun/image
+mkdir ~/iCub/datadump/$bun
+mkdir ~/iCub/datadump/$bun/image
 
 #sleep 1
 gnome-terminal --command './dumper.sh '$bun

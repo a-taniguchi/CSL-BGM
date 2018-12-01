@@ -4,6 +4,10 @@
 These source codes can be used in both iCub simulator and real iCub.  
 /For\_Real\_iCub/ : The folder for a real iCub robot  
 /For\_Simulator/ : The folder for iCub simulator  
+/learning/ :  Minimal python codes for learning.  
+If you want to use CSL-BGM with other data (without iCub data),  
+you can use it by changing some python codes in this folder.  
+
 
 ### Introduction
 Figure 1: This figure shows an overview of the cross-situational learning scenario as the focus of this study.
@@ -33,7 +37,7 @@ Human infants can acquire word meanings by estimating the relationships among mu
 
 Keywords: Bayesian model, cross-situational learning, lexical acquisition, multimodal categorization, symbol grounding, word meaning
 
-Citation:  
+Reference:  
 Akira Taniguchi, Tadahiro Taniguchi, and Angelo Cangelosi. "Cross-Situational Learning with Bayesian Generative Models for Multimodal Category and Word Learning in Robots." Frontiers in Neurorobotics 11: 66 (2017).  
 DOI: 10.3389/fnbot.2017.00066
 
@@ -42,3 +46,5 @@ https://www.frontiersin.org/articles/10.3389/fnbot.2017.00066/full
 
 Video:  
 https://youtu.be/SzyoWaj47Xc
+
+Materials: [Slide](https://sites.google.com/site/ataniguchi0403/research/IROSWS2016_AkiraTaniguchi02.pdf?attredirects=0), [Poster](https://sites.google.com/site/ataniguchi0403/research/IROSWS2016poster.pdf?attredirects=0)  

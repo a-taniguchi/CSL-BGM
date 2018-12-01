@@ -1,7 +1,7 @@
 #! /bin/sh
 #Akira Taniguchi 2016/06/10-
 
-#cd ~/Dropbox/iCub/
+#cd ~/iCub/
 
 echo -n "trialname?(output_folder) >"
 read bun
@@ -12,8 +12,8 @@ gnome-terminal --geometry=80x20+0+0 --command './world_action.sh'
 sleep 1
 gnome-terminal --geometry=80x20+0+0 --command './headdown.sh'
 
-mkdir ~/Dropbox/iCub/datadump/$bun
-mkdir ~/Dropbox/iCub/datadump/$bun/image
+mkdir ~/iCub/datadump/$bun
+mkdir ~/iCub/datadump/$bun/image
 
 sleep 2
 gnome-terminal --geometry=80x20+0+0 --command './work/iKin/onlineSolver/onlineSolver '$bun' init'
@@ -24,7 +24,6 @@ sleep 10
 gnome-terminal --geometry=80x20+0+0 --command './dumper.sh '$bun
 
 sleep 5
-#gnome-terminal --command '
 ./disconnect.sh $bun
 
 sleep 2
@@ -39,10 +38,7 @@ gnome-terminal --geometry=80x20+0+0 --command './work/cutout/cutout '$bun
 sleep 5
 ./work/cutout/cutout $bun
 
-#action wa 3 kai.<-botu
-
 sleep 2
-#gnome-terminal --command '
 ./connect.sh $bun
 
 sleep 2
@@ -55,7 +51,6 @@ gnome-terminal --geometry=80x20+0+0 --command './work/iKin/onlineSolver/onlineSo
 #
 
 sleep 30
-#gnome-terminal --command '
 ./disconnect.sh $bun
 
 #sleep 2

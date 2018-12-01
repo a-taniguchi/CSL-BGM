@@ -106,39 +106,10 @@ sig_o_init = 0.05#1.0
 mu_c_init  = [0,1]#[0,1]
 sig_c_init = 0.05#1.0 
 
-
-##latticelmパラメータ
-#knownn = [2,3,4] #[3]#         #言語モデルのn-gram長 (3)
-#unkn = [3,4] #[3]#            #綴りモデルのn-gram長 (3),5
-#annealsteps = [3,5,10]    #焼き鈍し法のステップ数 (3)
-#anneallength = [5,10,15]  #各焼き鈍しステップのイタレーション数 (5)
-
-
-##相互推定に関するパラメータ
-#sample_num = len(knownn)*len(unkn)  #取得するサンプル数
-#ITERATION = 10  #相互推定のイテレーション回数
-
-##単語の選択の閾値
-#threshold = 0.01
-
-
 Plot = 2000#1000  #位置分布ごとの描画の点プロット数
-
 #N_best_number = 1 #n-bestのnをどこまでとるか（n<=10）
 
-####################ファイル####################
+#################### File PATH ####################
 #パスはUbuntu使用時とWin使用時で変更する必要がある。特にUbuntuでiCub_simを動かすときは絶対パスになっているか要確認。
 datafolder =  "/home/akira/Dropbox/iCub/datadump/" #"./../datadump/" #
 #win:相対パス、ubuntu:絶対パス
-
-#speech_folder = "/home/*/Dropbox/Julius/directory/CC3Th2/*.wav" #*.wav" #音声の教示データフォルダ(Ubuntuフルパス)
-#data_name = 'datah.csv'      # 'test000' #位置推定の教示データ(./../sampleフォルダ内)
-#lang_init = 'phonemes.htkdic' #  'web.000.htkdic' #初期の単語辞書（./lang_mフォルダ内）
-
-
-#map_data : ./jygame/__inti__.py 
-
-#correct_Ct = 'Ct_correct.csv'  #データごとの正解のCt番号
-#correct_data = 'TAMD1_human.txt'  #データごとの正解の文章（単語列、区切り文字つき）(./data/)
-#correct_name = 'name_correct.csv'  #データごとの正解の場所の名前（音素列）
-

@@ -5,8 +5,6 @@
 
 /learning/
 > Python codes for learning, evaluation and visualization
-If you want to use CSL-BGM with other data (without iCub data), 
-you can use it by changing some python codes in this folder. 
 
 /work/
 > C++ Programs for iCub 

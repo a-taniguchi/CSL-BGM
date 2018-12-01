@@ -1,7 +1,7 @@
 #! /bin/sh
 #Akira Taniguchi 2016/06/10-
 
-#cd ~/Dropbox/iCub/
+#cd ~/iCub/
 
 echo -n "trialname?(output_folder) >"
 read bun
@@ -12,8 +12,8 @@ gnome-terminal --command './world.sh'
 sleep 1
 gnome-terminal --command './headdown.sh'
 
-mkdir ~/Dropbox/iCub/datadump/$bun
-mkdir ~/Dropbox/iCub/datadump/$bun/image
+mkdir ~/iCub/datadump/$bun
+mkdir ~/iCub/datadump/$bun/image
 
 sleep 2
 gnome-terminal --command './work/iKin/onlineSolver/onlineSolver '$bun' init'

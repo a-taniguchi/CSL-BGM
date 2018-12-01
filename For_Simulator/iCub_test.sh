@@ -9,8 +9,8 @@ gnome-terminal --tab --command 'yarp server --write'
 sleep 5
 gnome-terminal --command './headdown_real.sh'
 
-mkdir ~/Dropbox/iCub/datadump/$bun
-mkdir ~/Dropbox/iCub/datadump/$bun/image
+mkdir ~/iCub/datadump/$bun
+mkdir ~/iCub/datadump/$bun/image
 
 sleep 2
 gnome-terminal --command './work/iKin2/onlineSolver/onlineSolver '$bun' init'

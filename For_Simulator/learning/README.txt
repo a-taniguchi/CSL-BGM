@@ -1,53 +1,87 @@
+ï»¿//////////////////////////////////////
+README file for learning programs
+                         in simulator
+Author: Akira Taniguchi 
+2016/08/21 (Japanese version)
+2018/12/01 (English version)
 //////////////////////////////////////
-simulator—pƒvƒƒOƒ‰ƒ€ŒQ‚ÉŠÖ‚·‚éREADME
-learning program
-Akira Taniguchi 2016/08/21
-//////////////////////////////////////
 
-[folder]
-/data/
-ƒeƒXƒgÀs—p‚ÌŠwKƒf[ƒ^‚ğ•Û‘¶‚µ‚Ä‚¢‚½B
-Œ»İ‚Í•sg—pB
+[Folder]
+none.
 
-/sankou/
-ƒvƒƒOƒ‰ƒ€ì¬‚ÉQl‚É‚µ‚½‘¼ƒvƒƒOƒ‰ƒ€
+[Files]
+ARI.py: Calculate the ARI value of categorization result for each element of learned data and true (human) categorization result for evaluation
+ARI10.py: Calculate the ARI value for 10 trials
+ARI10_Fd.py: Calculate the ARI value between categorization results of Fd for 10 trials
+ARI_Fd.py: Calculate the ARI value between categorization results of Fd (Estimated sensory-channel for each word)
+CNNPCA_action.py: Program for extracting CNN-PCA features for action generation task
+CNNPCA_description.py: Program for extracting CNN-PCA features for description task
+CNN_feature.py: Program for extracting CNN feature vector from object image file
+PCA.py: Reduce dimensions of CNN features with PCA (due to the sklearn.decomposition being used, there may be a smaller number of dimensions than the specified number of dimensions)
+PCA_rename.py: (Version with different file names for each number of data)
+README.txt: This file
+__init__.py: File to set the initial values â€‹â€‹of learning parameters
+__init__for_action.py: File to set the initial values â€‹â€‹of parameters for action generation task
+action.py: Action experiment program (generate actions from learned files and word data)
+actionSeparate.py: 
+actiondatacollector.py: Before executing learn.py, it extracts action data as learning data from dump file of iCub_SIM.
 
-/torioki/
-ŠwK—pƒvƒƒOƒ‰ƒ€‚Ì•Êƒo[ƒWƒ‡ƒ“i”äŠr—p‚Ì•Êè–@j‚ğ•Û‘¶
 
-[file]
+dsift.py: a program to extract DSIFT
+learn.py: Learning program. Perform Gibbs sampling.
+mean ARI.py: Read ARI for each trial and give an average value
+mearnARI_attention.py: Average of ARI of only attention object
 
-__init__.pyFŠwK—p‚Ìƒpƒ‰ƒ[ƒ^‚Ì‰Šú’l‚ğİ’è‚·‚éƒtƒ@ƒCƒ‹
-action.pyFƒAƒNƒVƒ‡ƒ“ÀŒ±—pƒvƒƒOƒ‰ƒ€iŠwKÏ‚İƒtƒ@ƒCƒ‹‚Æ’PŒêƒf[ƒ^‚©‚çs“®‚ğ¶¬‚·‚éj
-actiondatacollector.pyFlearn.py‚ğÀs‚·‚é‘O‚ÉAiCub_SIM‚Ìdaumpƒtƒ@ƒCƒ‹‚©‚çƒAƒNƒVƒ‡ƒ“ƒf[ƒ^‚ğŠwK—pƒf[ƒ^‚Æ‚µ‚Ä’Šo‚·‚éƒvƒƒOƒ‰ƒ€B
-ARI.pyFŠwK‚³‚ê‚½ƒf[ƒ^‚Ì—v‘f‚²‚Æ‚ÌƒJƒeƒSƒŠŒ‹‰Ê‚Æ^‚ÌilŠÔ‚ÌjƒJƒeƒSƒŠŒ‹‰Ê‚ÌARI‚ğŒvZ‚·‚é
-ARI_attention.pyFAttention‚µ‚½•¨‘Ì‚Ì‚İ‚ÉŠÖ‚·‚éARI‚ğŒvZ‚·‚é
-CNN_feature.pyF•¨‘Ì‰æ‘œƒtƒ@ƒCƒ‹‚©‚çCNN“Á’¥—Ê‚ğæ‚èo‚·ƒvƒƒOƒ‰ƒ€
-CNNPCA_action.pyFƒAƒNƒVƒ‡ƒ“¶¬ƒ^ƒXƒN—p‚ÌCNN-PCA“Á’¥‚ğ’Šo‚·‚éƒvƒƒOƒ‰ƒ€
-dsift.pyFDSIFT‚ğ’Šo‚·‚éƒvƒƒOƒ‰ƒ€
-learn.pyFŠwK—pƒvƒƒOƒ‰ƒ€BƒMƒuƒXƒTƒ“ƒvƒŠƒ“ƒO‚ğÀs‚·‚éB
-meanARI.pyFŠes‚²‚Æ‚ÌARI‚ğ“Ç‚İ‚İA•½‹Ï’l‚ğo‚·
-mearnARI_attention.pyFAttention •¨‘Ì‚Ì‚İ‚ÌARI‚Ì•½‹Ï‚ğo‚·
-PCA.pyFCNN“Á’¥‚ğPCA‚Å’áŸŒ³‰»‚·‚éig—p‚µ‚Ä‚¢‚ésklearn.decomposition‚Ì“s‡ãAw’è‚µ‚½ŸŒ³”‚æ‚è­‚È‚¢ŸŒ³”‚É‚È‚éê‡‚ª‚ ‚éj
-PCA_rename.py:(ƒf[ƒ^”‚²‚Æ‚Éƒtƒ@ƒCƒ‹–¼‚ªˆÙ‚È‚éƒo[ƒWƒ‡ƒ“)
-plot_gmm.pyFˆÊ’uƒJƒeƒSƒŠ‚ÌƒKƒEƒX•ª•z‚ğ“_ƒvƒƒbƒg‚·‚éƒvƒƒOƒ‰ƒ€(NPB”Å‚¾‚ÆƒGƒ‰[‚ªo‚é)
-plot_gmm2.py:ˆÊ’uƒJƒeƒSƒŠ‚ÌƒKƒEƒX•ª•z‚ğ‘È‰~‚Å•`‰æƒvƒƒOƒ‰ƒ€(NPB”Å‚¾‚ÆƒGƒ‰[‚ªo‚é)
-plot_gmm_nd.pyFˆÊ’uƒJƒeƒSƒŠ‚ÌƒKƒEƒX•ª•z‚ğ“_ƒvƒƒbƒg‚·‚éƒvƒƒOƒ‰ƒ€
-plot_gmm2_nd.py:ˆÊ’uƒJƒeƒSƒŠ‚ÌƒKƒEƒX•ª•z‚ğ‘È‰~‚Å•`‰æƒvƒƒOƒ‰ƒ€(¬‡”ä‚Ìd‚İ‚ªl—¶‚Å‚«‚Ä‚¢‚È‚¢H)
-sift.pyFSIFT‚ÆRGB“Á’¥‚ğ’Šo‚·‚é
-sift_action.pyFƒAƒNƒVƒ‡ƒ“¶¬ƒ^ƒXƒN—pSIFT’Šo‚µAk-means‚ÅBOW‚ğ“¾‚éƒvƒƒOƒ‰ƒ€iHj
-sift_read_kmeans.pyF‰æ‘œ‚©‚çSIFT¨k-means‚µ‚ÄBOW‚ğ“¾‚éƒuƒƒOƒ‰ƒ€iHj
+plot_gmm.py: A program for plotting the Gaussian distribution of the position category (error occurs in NPB version)
+plot_gmm2.py: Gaussian distribution of position category is elliptically drawn program (error occurs in NPB version)
+plot_gmm_nd.py: Program for plotting Gaussian distribution of position category
+plot_gmm2_nd.py: Gaussian distribution of position category is elliptical drawing program (weight of mixture ratio can not be considered?)
+sift.py: extract SFT and RGB features
+sift_action.py: SIFT for action generation task and program for obtaining BOW with k-means (?)
+sift_read_kmeans.py: Program for obtaining BOW by SIFT â†’ k-means from the image (?)
 
-description.py:Action description task—pƒvƒƒOƒ‰ƒ€Bì¬’†B
+description.py: Program for Action description task. making.
 
-[ÀŒ±Àsè‡]
-1.datadumpƒtƒHƒ‹ƒ_‚Éƒf[ƒ^‚ğ—pˆÓ‚·‚é
-2.__init__.pyƒtƒ@ƒCƒ‹‚Ìƒpƒ‰ƒ[ƒ^‚ğİ’è‚·‚é
-2-1.wordƒtƒ@ƒCƒ‹‚ğ—pˆÓ‚·‚é(testss_word.csv)
-3.‰æ‘œ“Á’¥‚ğ’Šo‚·‚éBiCNN_feature.py and sift_rename.pyj
-4.CNN4096ŸŒ³ƒf[ƒ^‚Ìê‡APCA‚Å’áŸŒ³‰»‚·‚éBiPCA_rename.pyj
-5.“®ìƒf[ƒ^‚Ì•ÏŠ·ˆ—‚ğs‚¤Biactiondatacollector.pyj
-5.ŠwKilearn.pyj
+[Experiment execution procedure]
+1. Prepare the data in the datadump folder
+2. Set the parameters and PATH in the __init__.py file
+Prepare 2-1.word file (testss_word.csv)
+3. Extract image features. (CNN_feature.py and sift_rename.py)
+4. For CNN 4096 dimensional data, PCA reduces the dimension. (PCA_rename.py)
+5. Perform conversion data conversion processing. (Actiondatacollector.py)
+5. Learning (learn.py)
+
+__init__.pyï¼šå­¦ç¿’ç”¨ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®åˆæœŸå€¤ã‚’è¨­å®šã™ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«
+action.pyï¼šã‚¢ã‚¯ã‚·ãƒ§ãƒ³å®Ÿé¨“ç”¨ãƒ—ãƒ­ã‚°ãƒ©ãƒ ï¼ˆå­¦ç¿’æ¸ˆã¿ãƒ•ã‚¡ã‚¤ãƒ«ã¨å˜èªãƒ‡ãƒ¼ã‚¿ã‹ã‚‰è¡Œå‹•ã‚’ç”Ÿæˆã™ã‚‹ï¼‰
+actiondatacollector.pyï¼šlearn.pyã‚’å®Ÿè¡Œã™ã‚‹å‰ã«ã€iCub_SIMã®daumpãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ãƒ‡ãƒ¼ã‚¿ã‚’å­¦ç¿’ç”¨ãƒ‡ãƒ¼ã‚¿ã¨ã—ã¦æŠ½å‡ºã™ã‚‹ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã€‚
+ARI.pyï¼šå­¦ç¿’ã•ã‚ŒãŸãƒ‡ãƒ¼ã‚¿ã®è¦ç´ ã”ã¨ã®ã‚«ãƒ†ã‚´ãƒªçµæœã¨çœŸã®ï¼ˆäººé–“ã®ï¼‰ã‚«ãƒ†ã‚´ãƒªçµæœã®ARIã‚’è¨ˆç®—ã™ã‚‹
+ARI_attention.pyï¼šAttentionã—ãŸç‰©ä½“ã®ã¿ã«é–¢ã™ã‚‹ARIã‚’è¨ˆç®—ã™ã‚‹
+CNN_feature.pyï¼šç‰©ä½“ç”»åƒãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰CNNç‰¹å¾´é‡ã‚’å–ã‚Šå‡ºã™ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
+CNNPCA_action.pyï¼šã‚¢ã‚¯ã‚·ãƒ§ãƒ³ç”Ÿæˆã‚¿ã‚¹ã‚¯ç”¨ã®CNN-PCAç‰¹å¾´ã‚’æŠ½å‡ºã™ã‚‹ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
+dsift.pyï¼šDSIFTã‚’æŠ½å‡ºã™ã‚‹ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
+learn.pyï¼šå­¦ç¿’ç”¨ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã€‚ã‚®ãƒ–ã‚¹ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã‚’å®Ÿè¡Œã™ã‚‹ã€‚
+meanARI.pyï¼šå„è©¦è¡Œã”ã¨ã®ARIã‚’èª­ã¿è¾¼ã¿ã€å¹³å‡å€¤ã‚’å‡ºã™
+mearnARI_attention.pyï¼šAttention ç‰©ä½“ã®ã¿ã®ARIã®å¹³å‡ã‚’å‡ºã™
+PCA.pyï¼šCNNç‰¹å¾´ã‚’PCAã§ä½æ¬¡å…ƒåŒ–ã™ã‚‹ï¼ˆä½¿ç”¨ã—ã¦ã„ã‚‹sklearn.decompositionã®éƒ½åˆä¸Šã€æŒ‡å®šã—ãŸæ¬¡å…ƒæ•°ã‚ˆã‚Šå°‘ãªã„æ¬¡å…ƒæ•°ã«ãªã‚‹å ´åˆãŒã‚ã‚‹ï¼‰
+PCA_rename.py:(ãƒ‡ãƒ¼ã‚¿æ•°ã”ã¨ã«ãƒ•ã‚¡ã‚¤ãƒ«åãŒç•°ãªã‚‹ãƒãƒ¼ã‚¸ãƒ§ãƒ³)
+plot_gmm.pyï¼šä½ç½®ã‚«ãƒ†ã‚´ãƒªã®ã‚¬ã‚¦ã‚¹åˆ†å¸ƒã‚’ç‚¹ãƒ—ãƒ­ãƒƒãƒˆã™ã‚‹ãƒ—ãƒ­ã‚°ãƒ©ãƒ (NPBç‰ˆã ã¨ã‚¨ãƒ©ãƒ¼ãŒå‡ºã‚‹)
+plot_gmm2.py:ä½ç½®ã‚«ãƒ†ã‚´ãƒªã®ã‚¬ã‚¦ã‚¹åˆ†å¸ƒã‚’æ¥•å††ã§æç”»ãƒ—ãƒ­ã‚°ãƒ©ãƒ (NPBç‰ˆã ã¨ã‚¨ãƒ©ãƒ¼ãŒå‡ºã‚‹)
+plot_gmm_nd.pyï¼šä½ç½®ã‚«ãƒ†ã‚´ãƒªã®ã‚¬ã‚¦ã‚¹åˆ†å¸ƒã‚’ç‚¹ãƒ—ãƒ­ãƒƒãƒˆã™ã‚‹ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
+plot_gmm2_nd.py:ä½ç½®ã‚«ãƒ†ã‚´ãƒªã®ã‚¬ã‚¦ã‚¹åˆ†å¸ƒã‚’æ¥•å††ã§æç”»ãƒ—ãƒ­ã‚°ãƒ©ãƒ (æ··åˆæ¯”ã®é‡ã¿ãŒè€ƒæ…®ã§ãã¦ã„ãªã„ï¼Ÿ)
+sift.pyï¼šSIFTã¨RGBç‰¹å¾´ã‚’æŠ½å‡ºã™ã‚‹
+sift_action.pyï¼šã‚¢ã‚¯ã‚·ãƒ§ãƒ³ç”Ÿæˆã‚¿ã‚¹ã‚¯ç”¨SIFTæŠ½å‡ºã—ã€k-meansã§BOWã‚’å¾—ã‚‹ãƒ—ãƒ­ã‚°ãƒ©ãƒ ï¼ˆï¼Ÿï¼‰
+sift_read_kmeans.pyï¼šç”»åƒã‹ã‚‰SIFTâ†’k-meansã—ã¦BOWã‚’å¾—ã‚‹ãƒ–ãƒ­ã‚°ãƒ©ãƒ ï¼ˆï¼Ÿï¼‰
+
+description.py:Action description taskç”¨ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã€‚ä½œæˆä¸­ã€‚
+
+[å®Ÿé¨“å®Ÿè¡Œæ‰‹é †]
+1.datadumpãƒ•ã‚©ãƒ«ãƒ€ã«ãƒ‡ãƒ¼ã‚¿ã‚’ç”¨æ„ã™ã‚‹
+2.__init__.pyãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’è¨­å®šã™ã‚‹
+2-1.wordãƒ•ã‚¡ã‚¤ãƒ«ã‚’ç”¨æ„ã™ã‚‹(testss_word.csv)
+3.ç”»åƒç‰¹å¾´ã‚’æŠ½å‡ºã™ã‚‹ã€‚ï¼ˆCNN_feature.py and sift_rename.pyï¼‰
+4.CNN4096æ¬¡å…ƒãƒ‡ãƒ¼ã‚¿ã®å ´åˆã€PCAã§ä½æ¬¡å…ƒåŒ–ã™ã‚‹ã€‚ï¼ˆPCA_rename.pyï¼‰
+5.å‹•ä½œãƒ‡ãƒ¼ã‚¿ã®å¤‰æ›å‡¦ç†ã‚’è¡Œã†ã€‚ï¼ˆactiondatacollector.pyï¼‰
+5.å­¦ç¿’ï¼ˆlearn.pyï¼‰
 
 
 
