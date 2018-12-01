@@ -5,8 +5,6 @@ These source codes can be used in both iCub simulator and real iCub.
 /For\_Real\_iCub/ : The folder for a real iCub robot  
 /For\_Simulator/ : The folder for iCub simulator  
 /learning/ :  Minimal python codes for learning.  
-If you want to use CSL-BGM with other data (without iCub data),  
-you can use it by changing some python codes in this folder.  
 
 
 ### Introduction
