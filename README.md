@@ -2,9 +2,9 @@
 ## Cross-Situational Learning with Bayesian Generative Model (CSL-BGM)
 
 These source codes can be used in both iCub simulator and real iCub.  
-/For\_Real\_iCub/ : The folder for a real iCub robot  
-/For\_Simulator/ : The folder for iCub simulator  
-/learning/ :  Minimal python codes for learning.  
+- `/For_Real_iCub/` : The folder for a real iCub robot  
+- `/For_Simulator/` : The folder for iCub simulator  
+- `/learning/` :  Minimal python codes for learning.  
 
 
 ### Introduction
@@ -33,6 +33,8 @@ Plase see these sites.
 
 
 ---
+
+## Paper information  
 Abstract:  
 Human infants can acquire word meanings by estimating the relationships among multimodal information and words. In this paper, we propose a novel Bayesian generative model that can form multiple categories based on each sensory-channel and can associate words with any of four sensory-channels (action, position, object, and color). This paper focuses on cross-situational learning using the co-occurrence between words and information of sensory-channels in complex situations. We conducted a learning experiment using a simulator and a real humanoid iCub robot. In the experiments, a human tutor provided a sentence that describes an object of visual attention and an accompanying action to the robot. The experimental results showed that the proposed method was able to estimate the multiple categorizations and to learn the relationships between multiple sensory-channels and words accurately. In addition, we conducted an action generation task and an action description task based on word meanings learned in the cross-situational learning experiment. The experimental results showed the robot could successfully use the word meanings learned by using the proposed method.
 
@@ -48,4 +50,5 @@ https://www.frontiersin.org/articles/10.3389/fnbot.2017.00066/full
 Video:  
 https://youtu.be/SzyoWaj47Xc
 
-Materials: [Slide](https://sites.google.com/site/ataniguchi0403/research/IROSWS2016_AkiraTaniguchi02.pdf?attredirects=0), [Poster](https://sites.google.com/site/ataniguchi0403/research/IROSWS2016poster.pdf?attredirects=0)  
+Materials: [Slide](https://drive.google.com/file/d/1x9GInP4sed5eo-xf-lOuCjptJjcRFXaj/view?usp=sharing), [Poster](https://drive.google.com/file/d/11t1uURVSP7gjFAZyNkpEQCqk0Ojju1MK/view?usp=sharing)
+
