@@ -3,21 +3,8 @@
 ##############################################
 # iCub learning program 
 # Basically, Gibbs sampling of GMMs and LDA
-# Akira Taniguchi 2016/05/31-2016/6/15
+# Akira Taniguchi 2016/05/31-2020/07/15
 ##############################################
-
-###そもそもどんなデータを受け取るのか
-#別プログラムで、処理しておいて、読み込むだけにする（？）
-#単語は、latticelmする場合は、相互推定のプログラムを使いまわす
-#画像は、背景差分、画像切り出し、物体座標取得、特徴量抽出をする必要がある⇒物体座標はiCubに戻す必要がある
-#センサーモーターデータは、とりあえず、そのまま使う⇒K-meansと正規化
-#アクションデータは、すでに物体座標によって相対座標に直されたデータが入るものとする。
-
-###　流れ　###
-#単語データ、iCubのセンサーモーターデータを読み込む
-#ギブスサンプリングする（本プログラムの主要部分）
-#ガウスをpyplotで描画（？）して画像として保存する
-#学習したパラメータをファイルに保存する
 
 #numpy.random.multivariate_normal
 #http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.random.multivariate_normal.html
@@ -34,42 +21,8 @@
 #scipy.stats.rv_discrete
 #http://docs.scipy.org/doc/scipy-0.17.0/reference/generated/scipy.stats.rv_discrete.html
 
-#---遂行タスク---#
-#latticelmおよび相互推定も可能な様にコードを書く
-#pygameを消す⇒pyplotとかにする
-#いらないものを消す
-
-#イテレーション100回ごとぐらいで結果を保存するようにする
-##ｚのサンプリングで多項分布の事後確率がすべて0になる場合への対処
-
-##共分散Σのロバストサンプリング
-
-#---作業終了タスク---#
-#文章の格フレームのランダムサンプル関数
-#ファイル出力関数
-#ギブスサンプリング
-#順番：ｚ、π、φ、F、Θ
-#ギブスサンプリングの挙動確認
-#datadump/initial/ から初期値データと画像を読み込む？⇒画像処理プログラム
-#出力ファイルの形式確認
-#データなしの場合のガウスのサンプリングのロバスト処理
-#データ読み込み関数
-#muの初期値をk-meansで出す
-#変なデータの精査（006）
-####action の位置情報の正規化
-####Mu_aのロバストサンプリング
-
-#---保留---#
-#Fの全探索を早くする方法
-#処理の高速化
-
-#import glob
-#import codecs
-#import re
 import os
-#import sys
 import random
-#import string
 import collections
 import itertools
 import numpy as np
@@ -94,6 +47,14 @@ def stick_breaking(alpha, k):
     p = betas * remaining_pieces
     return p/p.sum()
 
+def Sample_Frame_Random(num):
+    #modal = [ modality[i] for i in range(len(modality))]
+    F = []
+    for i in xrange(num):
+      mo = int(uniform(0,len(modality)))
+      F = F + [ modality[mo] ]
+    return F
+
 def Sample_Frame(num):
     modal = ["a","p","o","c"]
     other = "x"
@@ -115,47 +76,47 @@ def Sample_Frame(num):
 def data_read(trialname,finename,sn,en):
     foldername = datafolder + trialname
     
-    M = [0 for d in xrange(D)]
-    N = [0 for d in xrange(D)]
+    M = [0 for d in xrange(D)]   # the set of the number of objects
+    N = [0 for d in xrange(D)]   # the set of the number of words
     Ad = [0 for d in xrange(D)]
     
-    w_dn = [ [] for d in xrange(D) ]
-    a_d  = [ [] for d in xrange(D) ]
-    o_dm = [ [] for d in xrange(D) ]
-    c_dm = [ [] for d in xrange(D) ]
-    p_dm = [ [] for d in xrange(D) ]
+    w_dn = [ [] for d in xrange(D) ]  # the set of sentences # The sentence is the set of words.
+    a_d  = [ [] for d in xrange(D) ]  # the set of actions
+    o_dm = [ [] for d in xrange(D) ]  # the set of object features
+    c_dm = [ [] for d in xrange(D) ]  # the set of object colors
+    p_dm = [ [] for d in xrange(D) ]  # the set of pobject positions
     
-    #c = 0
-    min_a = [10,10,10]   #仮の初期値
-    max_a = [-10,-10,-10]  #仮の初期値
+    min_a = [10,10,10]     # Temporary initial value
+    max_a = [-10,-10,-10]  # Temporary initial value
     min_o = 10000
     max_o = -10000
     
+    ## reading the set of the number of objects for each sentences
     for d in xrange(D):
-      gyo = 0
-      ##物体数M[d]の読み込み
+      line_num = 0
+      ## Read the number of objects M[d]
       for line in open(foldername+str(d+sn).zfill(3)+'/object_center.txt','r'):
-        if gyo == 0:
+        if line_num == 0:
           M[d] = int(line)
           o_dm[d] = [ [ 0 for k in xrange(k_sift) ] for m in xrange(M[d]) ]
           c_dm[d] = [ [ 0 for k in xrange(k_rgb)  ] for m in xrange(M[d]) ]
           p_dm[d] = [ [ 0 for k in xrange(dim_p)  ] for m in xrange(M[d]) ]
-          #elif gyo == 1:
+          #elif line_num == 1:
           #  Ad[d] = int(line)-1 #物体番号1からMを0からM-1にする
-        elif gyo == 1:
+        elif line_num == 1:
           dummy = 0
           #print "if random_obj was changed, but no problem."
         else:
           itemList = line[:-1].split(',')
           #for i in xrange(len(itemList)):
           if itemList[0] != '':
-            #物体座標p_dmの読み込み
-            p_dm[d][int(itemList[0])-1] = [float(itemList[1]),float(itemList[2])]#,float(itemList[3])]
-        gyo = gyo + 1
+            ## Read the position p_dm
+            p_dm[d][int(itemList[0])-1] = [float(itemList[1]),float(itemList[2])]
+        line_num = line_num + 1
       
       
       gyo = 0
-      #対象物体の座標、手先座標読み込み
+      ## Read the target object position and end-effector position (Hand posiiton of iCub) 
       for line in open(foldername+str(d+sn).zfill(3)+'/target_object.txt','r'):
         if gyo == 0:
           Ad[d] = int(line)-1
@@ -178,7 +139,7 @@ def data_read(trialname,finename,sn,en):
            min_a[i]= tmp[i]
         if (max_a[i] < tmp[i]):
            max_a[i] = tmp[i]
-      a_d[d] = list(tmp) + [randomove] #相対3次元位置、指の曲げ具合
+      a_d[d] = list(tmp) + [randomove] # Relative 3D position, finger bending (相対3次元位置、指の曲げ具合)
       
       gyo = 0
       for line in open(foldername+str(d+sn).zfill(3)+'/action.csv','r'):
@@ -186,7 +147,7 @@ def data_read(trialname,finename,sn,en):
         
         if ("" in itemList):
           itemList.pop(itemList.index(""))
-        #関節箇所ごとに最小値と最大値で正規化
+        # Normalized with minimum and maximum values for each joint location (関節箇所ごとに最小値と最大値で正規化)
         if(gyo == 1 or gyo == 7 or gyo == 10):
           for i in xrange(len(itemList)):
             if gyo == 1: #head
@@ -200,13 +161,13 @@ def data_read(trialname,finename,sn,en):
               max = [ 50, 30, 70]
             if itemList[i] != '':
               #print d,itemList[i]
-              a_d[d] = a_d[d] + [ (float(itemList[i])-min[i])/float(max[i]-min[i]) ]  #正規化して配列に加える	
+              a_d[d] = a_d[d] + [ (float(itemList[i])-min[i])/float(max[i]-min[i]) ]  #Normalize and add to array	
         if(gyo == 13):
           tactile = [0.0 for i in xrange(len(itemList)/12)]
           for i in xrange(len(itemList)/12):
             #for j in xrange(12):
             #  print i*12+j
-            tactile[i] = sum([float(itemList[i*12+j]) for j in xrange(12)])/float(255*12)  #正規化して12個の平均
+            tactile[i] = sum([float(itemList[i*12+j]) for j in xrange(12)])/float(255*12)  #Average of 12 data
         
         gyo = gyo + 1
       a_d[d] = a_d[d] + tactile
@@ -228,12 +189,12 @@ def data_read(trialname,finename,sn,en):
                 max_o = o_dm[d][m][i]
               
         if (CNNmode == 0) or (CNNmode == -1):
-          #BoFのカウント数を正規化
+          # Normalized BoF count (BoFのカウント数を正規化)
           sum_o_dm = sum(o_dm[d][m])
           for i in xrange(len(o_dm[d][m])):
             o_dm[d][m][i] = o_dm[d][m][i] / sum_o_dm
               
-        ##色情報 BoF(RGB)の読み込み
+        ## Read color information BoF(RGB)
         for line in open(foldername+str(d+sn).zfill(3)+'/image/object_RGB_BoF_'+str(m+1).zfill(2)+'.csv', 'r'):
           itemList = line[:-1].split(',')
           #print c
@@ -243,12 +204,12 @@ def data_read(trialname,finename,sn,en):
               #print c,i,itemList[i]
               c_dm[d][m][i] = float(itemList[i])
         
-        #BoFのカウント数を正規化
+        # Normalized BoF count (BoFのカウント数を正規化)
         sum_c_dm = sum(c_dm[d][m])
         for i in xrange(len(c_dm[d][m])):
           c_dm[d][m][i] = c_dm[d][m][i] / sum_c_dm
       
-    #言語情報を取得
+    # Get the word data
     d = 0
     for line in open(foldername +"("+str(sn).zfill(3)+"-"+str(en).zfill(3)+")"+'/' + trialname +'_words.csv', 'r'):
         itemList = line[:-1].split(',')
@@ -260,13 +221,13 @@ def data_read(trialname,finename,sn,en):
     
     print w_dn
     
-    ##アクションデータの相対座標を正規化
+    ## Normalize relative coordinates of action data (アクションデータの相対座標を正規化)
     for d in xrange(D):
       a_d[d][0] = (a_d[d][0] - min_a[0]) / (max_a[0] - min_a[0])
       a_d[d][1] = (a_d[d][1] - min_a[1]) / (max_a[1] - min_a[1])
       a_d[d][2] = (a_d[d][2] - min_a[2]) / (max_a[2] - min_a[2])
       
-      #CNN特徴の正規化
+      # CNN feature normalization (CNN特徴の正規化)
       if CNNmode == 1:
         for m in xrange(M[d]):
           for i in xrange(dim_o):
@@ -286,7 +247,7 @@ def data_read(trialname,finename,sn,en):
     
     #w_dn = [["reach","front","box","green"] for i in range(1)]+[["touch","right","cup","green"] for i in range(1)]+[["touch","front","box","red"] for i in range(1)]+[["reach","front","box","blue"] for i in range(1)]+[["touch","front","box","green"] for i in range(1)]+[["lookat","front","cup","blue"] for i in range(1)]+[["lookat","left","cup","red"] for i in range(1)]+[["lookat","right","box","red"] for i in range(1)]#+[["a3a","p2p","o1o","c3c"] for i in range(1)]+[["a1a","p3p","o2o","c1c"] for i in range(1)]
     
-    #読み込んだデータを保存
+    # Save the loaded data to one file (読み込んだデータを保存)
     fp = open( foldername +"("+str(sn).zfill(3)+"-"+str(en).zfill(3)+")"+'/' + filename +'/'+ trialname + '_' + filename +'_data.csv', 'w')
     for i in xrange(3):
       fp.write(repr(min_a[i])+',')
@@ -328,7 +289,8 @@ def data_read(trialname,finename,sn,en):
 def para_save(foldername,trialname,filename,za,zp,zo,zc,Fd,theta,W_list,Mu_a,Sig_a,Mu_p,Sig_p,Mu_o,Sig_o,Mu_c,Sig_c,pi_a,pi_p,pi_o,pi_c):
     foldername = foldername + "/" + filename
     trialname = trialname + "_" + filename
-    #各パラメータ値を一つのファイルに出力
+    
+    #Saving each parameter
     fp = open( foldername +'/' + trialname +'_kekka.csv', 'w')
     fp.write('sampling_data\n') 
     fp.write('za\n')
@@ -483,7 +445,7 @@ def para_save(foldername,trialname,filename,za,zp,zo,zc,Fd,theta,W_list,Mu_a,Sig
     
     #print 'File Output Successful!(filename:'+filename+')\n'
     
-    ##パラメータそれぞれをそれぞれのファイルとしてはく
+    ## Output each parameter as each file (パラメータそれぞれをそれぞれのファイルとして出力)
     fp = open(foldername +'/' + trialname +'_za.csv', 'w')
     for d in xrange(D):
       fp.write(repr(za[d])+',')
@@ -653,18 +615,18 @@ def para_save(foldername,trialname,filename,za,zp,zo,zc,Fd,theta,W_list,Mu_a,Sig
 def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c_dm, Ad):
       np.random.seed()
       print w_dn
-      ##各パラメータ初期化処理
+      # random initialzation
       print u"Initialize Parameters..."
       za = [ int(uniform(0,Ko)) for d in xrange(D) ]
       zp = [ [ int(uniform(0,Kp)) for m in xrange(M[d]) ] for d in xrange(D) ]
       zo = [ [ int(uniform(0,Ko)) for m in xrange(M[d]) ] for d in xrange(D) ]
       zc = [ [ int(uniform(0,Kc)) for m in xrange(M[d]) ] for d in xrange(D) ]
       
-      Fd = [ Sample_Frame(N[d]) for d in xrange(D)] #初期値はランダムに設定("a","p","o","c")
+      Fd = [ Sample_Frame(N[d]) for d in xrange(D)] #random initialzation ("a","p","o","c")
       
       cw = np.sum([collections.Counter(w_dn[d]) for d in xrange(D)])
-      W_list = list(cw)  ##単語のリスト
-      W = len(cw)  ##単語の種類数のカウント
+      W_list = list(cw)  ##List of words
+      W = len(cw)  ##Length of word list
       theta = [ sum(dirichlet(np.array([gamma for w in xrange(W)]),100))/100.0 for i in xrange(L) ] #indexと各モダリティーの対応付けはdictionary形式で呼び出す
       
       #KMeans(n_clusters=Ka, init='k-means++').fit(a_d).cluster_centers_
@@ -692,15 +654,15 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
       
       
       if nonpara == 0 :
-        pi_a = sum(dirichlet([ alpha_a for c in xrange(Ka)],100))/100.0 #stick_breaking(gamma, L)#
-        pi_p = sum(dirichlet([ alpha_p for c in xrange(Kp)],100))/100.0 #stick_breaking(gamma, L)#
-        pi_o = sum(dirichlet([ alpha_o for c in xrange(Ko)],100))/100.0 #stick_breaking(gamma, L)#
-        pi_c = sum(dirichlet([ alpha_c for c in xrange(Kc)],100))/100.0 #stick_breaking(gamma, L)#
+        pi_a = sum(dirichlet([ alpha_a for c in xrange(Ka)],100))/100.0
+        pi_p = sum(dirichlet([ alpha_p for c in xrange(Kp)],100))/100.0 
+        pi_o = sum(dirichlet([ alpha_o for c in xrange(Ko)],100))/100.0 
+        pi_c = sum(dirichlet([ alpha_c for c in xrange(Kc)],100))/100.0 
       elif nonpara == 1:
-        pi_a = stick_breaking(alpha_a, Ka) #sum(dirichlet([ alpha_a for c in xrange(Ka)],100))/100.0 #
-        pi_p = stick_breaking(alpha_p, Kp) #sum(dirichlet([ alpha_p for c in xrange(Kp)],100))/100.0 #stick_breaking(gamma, L)#
-        pi_o = stick_breaking(alpha_o, Ko) #sum(dirichlet([ alpha_o for c in xrange(Ko)],100))/100.0 #stick_breaking(gamma, L)#
-        pi_c = stick_breaking(alpha_c, Kc) #sum(dirichlet([ alpha_c for c in xrange(Kc)],100))/100.0 #stick_breaking(gamma, L)#
+        pi_a = stick_breaking(alpha_a, Ka)
+        pi_p = stick_breaking(alpha_p, Kp) 
+        pi_o = stick_breaking(alpha_o, Ko) 
+        pi_c = stick_breaking(alpha_c, Kc) 
       
       print theta
       print pi_a
@@ -713,7 +675,7 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
       print Mu_c
       print Fd
       
-      ###初期値を保存(このやり方でないと値が変わってしまう)
+      ### Copy initial values (このやり方でないと値が変わってしまう)
       za_init = [ za[d] for d in xrange(D)]
       zp_init = [ [ zp[d][m] for m in xrange(M[d]) ] for d in xrange(D) ]
       zo_init = [ [ zo[d][m] for m in xrange(M[d]) ] for d in xrange(D) ]
@@ -733,26 +695,26 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
       pi_o_init = [pi_o[k] for k in xrange(Ko)]
       pi_c_init = [pi_c[k] for k in xrange(Kc)]
       
-      #初期パラメータのセーブ
+      ### save initial values 
       #filename_init = filename + "/init"
       trialname_init = "init/" + trialname 
       para_save(foldername,trialname_init,filename,za_init,zp_init,zo_init,zc_init,Fd_init,theta_init,W_list,Mu_a_init,Sig_a_init,Mu_p_init,Sig_p_init,Mu_o_init,Sig_o_init,Mu_c_init,Sig_c_init,pi_a_init,pi_p_init,pi_o_init,pi_c_init)
       
       ######################################################################
-      ####                       ↓学習フェーズ↓                       ####
+      ####                     ↓ Learning phase ↓                       ####
       ######################################################################
       print u"- <START> Learning of Lexicon and Multiple Categories ver. iCub MODEL. -"
       
-      for iter in xrange(num_iter):   #イテレーションを行う
+      for iter in xrange(num_iter):   #Iteration of Gibbs sampling
         print '----- Iter. '+repr(iter+1)+' -----'
         
-        ########## ↓ ##### zaのサンプリング ##### ↓ ##########
+        ########## ↓ ##### Sampling za ##### ↓ ##########
         print u"Sampling za..."
         
-        for d in xrange(D):         #データごとに
+        for d in xrange(D):         #for each sentence
           temp = np.array(pi_a)
-          for k in xrange(Ka):      #カテゴリ番号ごとに
-            for n in xrange(N[d]):  #文中の単語ごとに
+          for k in xrange(Ka):      #for each index of category
+            for n in xrange(N[d]):  #for each word in a sentence
               if Fd[d][n] == "a":
                 temp[k] = temp[k] * theta[k + dict["a"]][W_list.index(w_dn[d][n])]
             temp[k] = temp[k] * multivariate_normal.pdf(a_d[d], mean=Mu_a[k], cov=Sig_a[k])
@@ -760,16 +722,16 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
           temp = temp / np.sum(temp)  #正規化
           za[d] = list(multinomial(1,temp)).index(1)
         print za
-        ########## ↑ ##### zaのサンプリング ##### ↑ ##########
+        ########## ↑ ##### Sampling za ##### ↑ ##########
         
-        ########## ↓ ##### zpのサンプリング ##### ↓ ##########
+        ########## ↓ ##### Sampling zp ##### ↓ ##########
         print u"Sampling zp..."
         
-        for d in xrange(D):         #データごとに
-          for m in xrange(M[d]):    #物体ごとに
+        for d in xrange(D):         #for each sentence
+          for m in xrange(M[d]):    #for each obect
             temp = np.array(pi_p)
-            for k in xrange(Kp):      #カテゴリ番号ごとに
-              for n in xrange(N[d]):  #文中の単語ごとに
+            for k in xrange(Kp):      #for each index of category
+              for n in xrange(N[d]):  #for each word in a sentence
                 if Fd[d][n] == "p" and Ad[d] == m:
                   temp[k] = temp[k] * theta[k + dict["p"]][W_list.index(w_dn[d][n])]
               temp[k] = temp[k] * multivariate_normal.pdf(p_dm[d][m], mean=Mu_p[k], cov=Sig_p[k])
@@ -777,9 +739,9 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
             temp = temp / np.sum(temp)  #正規化
             zp[d][m] = list(multinomial(1,temp)).index(1)
         print zp
-        ########## ↑ ##### zpのサンプリング ##### ↑ ##########
+        ########## ↑ ##### Sampling zp ##### ↑ ##########
         
-        ########## ↓ ##### zoのサンプリング ##### ↓ ##########
+        ########## ↓ ##### Sampling zo ##### ↓ ##########
         print u"Sampling zo..."
         
         for d in xrange(D):         #データごとに
@@ -801,9 +763,9 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
             #print np.exp(logtemp),np.sum(np.exp(logtemp))
             zo[d][m] = list( multinomial(1,np.exp(logtemp)) ).index(1)
         print zo
-        ########## ↑ ##### zoのサンプリング ##### ↑ ##########
+        ########## ↑ ##### Sampling zo ##### ↑ ##########
         
-        ########## ↓ ##### zcのサンプリング ##### ↓ ##########
+        ########## ↓ ##### Sampling zc ##### ↓ ##########
         print u"Sampling zc..."
         
         for d in xrange(D):         #データごとに
@@ -822,7 +784,7 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
             #print temp
             zc[d][m] = list(multinomial(1,temp)).index(1)
         print zc
-        ########## ↑ ##### zcのサンプリング ##### ↑ ##########
+        ########## ↑ ##### Sampling zc ##### ↑ ##########
         
         ########## ↓ ##### π_aのサンプリング ##### ↓ ##########
         print u"Sampling PI_a..."
@@ -1079,11 +1041,10 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
         
         ########## ↑ ##### Fdのサンプリング ##### ↑ ##########
         
-        ########## ↓ ##### Θのサンプリング ##### ↓ ##########
+        ########## ↓ ##### Sampling Θ ##### ↓ ##########
         print u"Sampling Theta..."
         #dict = {"a":0, "p":Ka, "o":Ka+Kp, "c":Ka+Kp+Ko}   #各モダリティのindexにキーを足すとΘのindexになる
         
-        #for i in xrange(L):
         temp = [np.array([gamma for w in xrange(W)]) for i in xrange(L)]
         for d in xrange(D):
             for n in xrange(N[d]):
@@ -1096,20 +1057,20 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
               if (Fd[d][n] == "c"):
                 temp[zc[d][Ad[d]] + dict["c"]][W_list.index(w_dn[d][n])] = temp[zc[d][Ad[d]] + dict["c"]][W_list.index(w_dn[d][n])] + 1
           
-        #加算したデータとパラメータから事後分布を計算しサンプリング
+        #Sampling from the posterior distribution calculated by the added data and hyperparameter
         theta = [sum(dirichlet(temp[i],100))/100.0 for i in xrange(L)] ##ロバストネスを上げる100
         
         print theta
-        ########## ↑ ##### Θのサンプリング ##### ↑ ##########
-        print ""  #改行用
+        ########## ↑ ##### Sampling Θ ##### ↑ ##########
+        print "" 
       
       ######################################################################
-      ####                       ↑学習フェーズ↑                       ####
+      ####                     ↑ Learning phase ↑                       ####
       ######################################################################
       
       
       loop = 1
-      ########  ↓ファイル出力フェーズ↓  ########
+      ########  ↓Files output↓  ########
       if loop == 1:
         print "--------------------"
         #最終学習結果を出力
@@ -1146,63 +1107,16 @@ def simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c
         
         print "--------------------"
         
-        #ファイルに保存
+        #Saving parameters to files
         para_save(foldername,trialname,filename,za,zp,zo,zc,Fd,theta,W_list,Mu_a,Sig_a,Mu_p,Sig_p,Mu_o,Sig_o,Mu_c,Sig_c,pi_a,pi_p,pi_o,pi_c)
         
-      ########  ↑ファイル出力フェーズ↑  ########
+      ########  ↑Files output↑  ######## 
       
-      """
-      ##学習後の描画用処理
-      iti = []    #位置分布からサンプリングした点(x,y)を保存する
-      #Plot = 500  #プロット数
-      
-      K_yes = 0
-      ###全てのパーティクルに対し
-      for j in range(K) : 
-        yes = 0
-        for t in xrange(N):  #jが推定された位置分布のindexにあるか判定
-          if j == It[t]:
-            yes = 1
-        if yes == 1:
-          K_yes = K_yes + 1
-          for i in xrange(Plot):
-            if (data_name != "test000"):
-              S_temp = [[ S[j][0][0]/(0.05*0.05) , S[j][0][1]/(0.05*0.05) ] , [ S[j][1][0]/(0.05*0.05) , S[j][1][1]/(0.05*0.05) ]]
-              x1,y1 = np.random.multivariate_normal( [(Myu[j][0][0][0]+37.8)/0.05, (Myu[j][1][0][0]+34.6)/0.05] , S_temp , 1).T
-            else:
-              x1,y1 = np.random.multivariate_normal([Myu[j][0][0][0],Myu[j][1][0][0]],S[j],1).T
-            #print x1,y1
-            iti = iti + [[x1,y1]]
-      
-      iti = iti + [[K_yes,Plot]]  #最後の要素[[位置分布の数],[位置分布ごとのプロット数]]
-      #print iti
-      filename2 = str(iteration) + "_" + str(sample)
-      """
-      
-      #loop = 1 #メインループ用フラグ
-      #while loop:
-      #  #MAINCLOCK.tick(FPS)
-      #  events = pygame.event.get()
-      #  for event in events:
-      #      if event.type == KEYDOWN:
-      #          if event.key  == K_ESCAPE: exit()
-      #  viewer.show(world,iti,0,[filename],[filename2])
-      #  loop = 0
-      
-      
-      
-
-
-
 
 if __name__ == '__main__':
     import sys
     import shutil
-    #import os.path
     from __init__ import *
-    #from JuliusLattice_gmm import *
-    #import time
-    
     
     #filename = sys.argv[1]
     #print filename
@@ -1225,454 +1139,19 @@ if __name__ == '__main__':
     
     foldername = datafolder + trialname+"("+str(sn).zfill(3)+"-"+str(en).zfill(3)+")"
     
-    #フォルダ作成
+    #make folder
     Makedir( foldername + "/" + filename )
     Makedir( foldername + "/" + filename + "/init")
     
-    #init.pyをコピー
+    #Copy of init.py
     shutil.copy("./__init__.py", foldername + "/" + filename + "/init")
     
-    #データの読み込み(単語、切り出した物体特徴と色と位置、姿勢と触覚と手先位置)
+    #Reading data files (単語、切り出した物体特徴と色と位置、姿勢と触覚と手先位置)
     M, N, w_dn, a_d, p_dm, o_dm, c_dm, Ad = data_read(trialname,filename,sn,en)
     #print w_dn
     
-    #Gibbs sampling を実行
+    #Gibbs sampling
     simulate(foldername,trialname,filename,sn,en, M, N, w_dn, a_d, p_dm, o_dm, c_dm, Ad)
     
-    
-    
-    
-    
-    
-    
-    #simulate(filename, data_read(filename))
-    
-    """
-    for i in xrange(ITERATION):
-      print "--------------------------------------------------"
-      print "ITERATION:",i+1
-      
-      
-      Julius_lattice(i,filename)    ##音声認識、ラティス形式出力、opemFST形式へ変換
-      #p = os.popen( "python JuliusLattice_gmm.py " + str(i+1) +  " " + filename )
-      
-      
-      
-      while (os.path.exists("./data/" + filename + "/fst_gmm_" + str(i+1) + "/" + str(kyouji_count-1).zfill(3) +".fst" ) != True):
-        print "./data/" + filename + "/fst_gmm_" + str(i+1) + "/" + str(kyouji_count-1).zfill(3) + ".fst",os.path.exists("./data/" + filename + "/fst_gmm_" + str(i+1).zfill(3) + "/" + str(kyouji_count-1) +".fst" ),"wait(60s)... or ERROR?"
-        time.sleep(60.0) #sleep(秒指定)
-      print "ITERATION:",i+1," Julius complete!"
-      
-      #for sample in xrange(sample_num):
-      sample = 0  ##latticelmのパラメータ通りだけサンプルする
-      for p1 in xrange(len(knownn)):
-        for p2 in xrange(len(unkn)):
-          if sample < sample_num:
-            print "latticelm run. sample_num:" + str(sample)
-            p = os.popen( "latticelm -input fst -filelist data/" + filename + "/fst_gmm_" + str(i+1) + "/fstlist.txt -prefix data/" + filename + "/out_gmm_" + str(i+1) + "/" + str(sample) + "_ -symbolfile data/" + filename + "/fst_gmm_" + str(i+1) + "/isyms.txt -burnin 100 -samps 100 -samprate 100 -knownn " + str(knownn[p1]) + " -unkn " + str(unkn[p2]) )   ##latticelm  ## -annealsteps 10 -anneallength 15
-            time.sleep(1.0) #sleep(秒指定)
-            while (os.path.exists("./data/" + filename + "/out_gmm_" + str(i+1) + "/" + str(sample) + "_samp.100" ) != True):
-              print "./data/" + filename + "/out_gmm_" + str(i+1) + "/" + str(sample) + "_samp.100",os.path.exists("./data/" + filename + "/out_gmm_" + str(i+1) + "/" + str(sample) + "_samp.100" ),"wait(30s)... or ERROR?"
-              p.close()
-              p = os.popen( "latticelm -input fst -filelist data/" + filename + "/fst_gmm_" + str(i+1) + "/fstlist.txt -prefix data/" + filename + "/out_gmm_" + str(i+1) + "/" + str(sample) + "_ -symbolfile data/" + filename + "/fst_gmm_" + str(i+1) + "/isyms.txt -burnin 100 -samps 100 -samprate 100 -knownn " + str(knownn[p1]) + " -unkn " + str(unkn[p2]) )   ##latticelm  ## -annealsteps 10 -anneallength 15
-              
-              time.sleep(30.0) #sleep(秒指定)
-            sample = sample + 1
-            p.close()
-      print "ITERATION:",i+1," latticelm complete!"
-      
-      simulate(i+1)          ##場所概念の学習
-      
-      print "ITERATION:",i+1," Learning complete!"
-      sougo(i+1)             ##相互情報量計算+##単語辞書登録
-      print "ITERATION:",i+1," Language Model update!"
-      #Language_model_update(i+1)  ##単語辞書登録
-    """
-    ##ループ後処理
-    
-    #p0.close()
-    
-
-
-
-
 
 ########################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-def sougo(iteration):
-  #MI_Samp = [0.0 for sample in xrange(sample_num)]  ##サンプルの数だけMIを求める
-  MI_Samp2 = [0.0 for sample in xrange(sample_num)]  ##サンプルの数だけMIを求める
-  #tanjyun_log = [0.0 for sample in xrange(sample_num)]
-  #tanjyun_log2 = [0.0 for sample in xrange(sample_num)]
-  #N = 0      #データ個数用
-  #sample_num = 1  #取得するサンプル数
-  Otb_Samp = [[] for sample in xrange(sample_num)]   #単語分割結果：教示データ
-  W_index = [[] for sample in xrange(sample_num)]
-  
-  for sample in xrange(sample_num):
-    
-    #####↓##発話した文章ごとに相互情報量を計算し、サンプリング結果を選ぶ##↓######
-    
-    ##発話認識文データを読み込む
-    ##空白またはカンマで区切られた単語を行ごとに読み込むことを想定する
-    
-    N = 0
-    #for sample in xrange(sample_num):
-    #テキストファイルを読み込み
-    for line in open('./data/' + filename + '/out_gmm_' + str(iteration) + '/' + str(sample) + '_samp.100', 'r'):   ##*_samp.100を順番に読み込む
-        itemList = line[:-1].split(' ')
-        
-        #<s>,<sp>,</s>を除く処理：単語に区切られていた場合
-        for b in xrange(5):
-          if ("<s><s>" in itemList):
-            itemList.pop(itemList.index("<s><s>"))
-          if ("<s><sp>" in itemList):
-            itemList.pop(itemList.index("<s><sp>"))
-          if ("<s>" in itemList):
-            itemList.pop(itemList.index("<s>"))
-          if ("<sp>" in itemList):
-            itemList.pop(itemList.index("<sp>"))
-          if ("<sp><sp>" in itemList):
-            itemList.pop(itemList.index("<sp><sp>"))
-          if ("</s>" in itemList):
-            itemList.pop(itemList.index("</s>"))
-          if ("<sp></s>" in itemList):
-            itemList.pop(itemList.index("<sp></s>"))
-          if ("" in itemList):
-            itemList.pop(itemList.index(""))
-        #<s>,<sp>,</s>を除く処理：単語中に存在している場合
-        for j in xrange(len(itemList)):
-          itemList[j] = itemList[j].replace("<s><s>", "")
-          itemList[j] = itemList[j].replace("<s>", "")
-          itemList[j] = itemList[j].replace("<sp>", "")
-          itemList[j] = itemList[j].replace("</s>", "")
-        for b in xrange(5):
-          if ("" in itemList):
-            itemList.pop(itemList.index(""))
-        
-        Otb_Samp[sample] = Otb_Samp[sample] + [itemList]
-        #if sample == 0:
-        N = N + 1  #count
-        
-        #for j in xrange(len(itemList)):
-        #    print u"%s " % (str(itemList[j])),
-        #print u""  #改行用
-        
-        
-    
-    ##場所の名前の多項分布のインデックス用
-    #W_index = []
-    #for sample in xrange(sample_num):    #サンプル個分
-    for n in xrange(N):                #発話文数分
-        for j in xrange(len(Otb_Samp[sample][n])):   #一文における単語数分
-          if ( (Otb_Samp[sample][n][j] in W_index[sample]) == False ):
-            W_index[sample].append(Otb_Samp[sample][n][j])
-            #print str(W_index),len(W_index)
-    
-    print "(",
-    for i in xrange(len(W_index[sample])):
-      print "\""+ str(i) + ":" + str(W_index[sample][i]) + "\",",  #unicode(W_index[sample][i], 'shift-jis').encode('utf-8')
-    print ")"
-    
-    
-    #print type(W_index[sample][i])
-    #print type(unicode(W_index[sample][i], 'shift-jis').encode('utf-8'))
-    #print type(unicode(W_index[sample][i], 'utf-8'))
-    
-  ##サンプリングごとに、時刻tデータごとにBOW化(?)する、ベクトルとする
-  Otb_B_Samp = [ [ [] for n in xrange(N) ] for ssss in xrange(sample_num) ]
-  for sample in xrange(sample_num):
-    for n in xrange(N):
-      Otb_B_Samp[sample][n] = [0 for i in xrange(len(W_index[sample]))]
-  
-  for sample in xrange(sample_num):
-    #for sample in xrange(sample_num):
-    for n in xrange(N):
-      for j in xrange(len(Otb_Samp[sample][n])):
-          #print n,j,len(Otb_Samp[sample][n])
-          for i in xrange(len(W_index[sample])):
-            if (W_index[sample][i] == Otb_Samp[sample][n][j] ):
-              Otb_B_Samp[sample][n][i] = Otb_B_Samp[sample][n][i] + 1
-    #print Otb_B
-    
-    
-    
-    W = [ [beta0 for j in xrange(len(W_index[sample]))] for c in xrange(L) ]  #場所の名前(多項分布：W_index次元)[L]
-    pi = [ 0 for c in xrange(L)]     #場所概念のindexの多項分布(L次元)
-    #Ct = [ int(uniform(0,L)) for n in xrange(N)]
-    Ct = []
-    
-    ##piの読み込み
-    for line in open('./data/' + filename +'/' + filename + '_pi_'+str(iteration) + "_" + str(sample) + '.csv', 'r'):
-        itemList = line[:-1].split(',')
-        
-        for i in xrange(len(itemList)):
-          if itemList[i] != '':
-            pi[i] = float(itemList[i])
-        
-    ##Ctの読み込み
-    for line in open('./data/' + filename +'/' + filename + '_Ct_'+str(iteration) + "_" + str(sample) + '.csv', 'r'):
-        itemList = line[:-1].split(',')
-        
-        for i in xrange(len(itemList)):
-          if itemList[i] != '':
-            Ct = Ct + [int(itemList[i])]
-        
-    ##Wの読み込み
-    c = 0
-    #テキストファイルを読み込み
-    for line in open('./data/' + filename +'/' + filename + '_W_' + str(iteration) + '_' + str(sample) + '.csv', 'r'):
-        itemList = line[:-1].split(',')
-        #print c
-        #W_index = W_index + [itemList]
-        for i in xrange(len(itemList)):
-            if itemList[i] != '':
-              #print c,i,itemList[i]
-              W[c][i] = float(itemList[i])
-              
-              #print itemList
-        c = c + 1
-    
-    
-    
-    #####↓##場所概念ごとに単語ごとに相互情報量を計算、高いものから表示##↓######
-    ##相互情報量による単語のセレクション
-    MI = [[] for c in xrange(L)]
-    W_in = []    #閾値以上の単語集合
-    #W_out = []   #W_in以外の単語
-    #i_best = len(W_index)    ##相互情報量上位の単語をどれだけ使うか
-    #MI_best = [ ['' for c in xrange(L)] for i in xrange(i_best) ]
-    ###相互情報量を計算
-    for c in xrange(L):
-      #print "Concept:%d" % c
-      #W_temp = Multinomial(W[c])
-      for o in xrange(len(W_index[sample])):
-        word = W_index[sample][o]
-        
-        ##BOW化(?)する、ベクトルとする
-        #Otb_B = [0 for i in xrange(len(W_index[sample]))]
-        #Otb_B[o] = 1
-        
-        #print W[c]
-        #print Otb_B
-        
-        score = MI_binary(o,W,pi,c)
-        
-        MI[c].append( (score, word) )
-        
-        if (score >= threshold):  ##閾値以上の単語をすべて保持
-          #print score , threshold ,word in W_in
-          if ((word in W_in) == False):  #リストに単語が存在しないとき
-            #print word
-            W_in = W_in + [word]
-        #else:
-        #  W_out = W_out + [word]
-        
-      MI[c].sort(reverse=True)
-      #for i in xrange(i_best):
-      #  MI_best[i][c] = MI[c][i][1]
-      
-      #for score, word in MI[c]:
-      #  print score, word
-    
-    ##ファイル出力
-    fp = open('./data/' + filename + '/' + filename + '_sougo_C_' + str(iteration) + '_' + str(sample) + '.csv', 'w')
-    for c in xrange(L):
-      fp.write("Concept:" + str(c) + '\n')
-      for score, word in MI[c]:
-        fp.write(str(score) + "," + word + '\n')
-      fp.write('\n')
-    #for c in xrange(len(W_index)):
-    fp.close()
-    
-    #####↑##場所概念ごとに単語ごとに相互情報量を計算、高いものから表示##↑######
-    
-    if (len(W_in) == 0 ):
-      print "W_in is empty."
-      W_in = W_index[sample] ##選ばれる単語がなかった場合、W_indexをそのままいれる
-    
-    print W_in
-    
-    ##場所の名前W（多項分布）をW_inに含まれる単語のみにする
-    
-    #for j in xrange(len(W_index[sample])):
-    #  for i in xrange(len(W_in)):
-    #    if (W_index[sample][j] in W_in == False):
-    #      W_out = W_out + [W_index[sample][j]]
-    
-    
-    W_reco = [ [0.0 for j in xrange(len(W_in))] for c in xrange(L) ]  #場所の名前(多項分布：W_index次元)[L]
-    #W_index_reco = ["" for j in xrange(len(W_in))]
-    #Otb_B_Samp_reco = [ [0 for j in xrange(len(W_in))] for n in xrange(N) ]
-    #print L,N
-    #print W_reco
-    for c in xrange(L):
-      for j in xrange(len(W_index[sample])):
-        for i in xrange(len(W_in)):
-          if ((W_in[i] in W_index[sample][j]) == True):
-            W_reco[c][i] = float(W[c][j])
-            #for t in xrange(N):
-            #  Otb_B_Samp_reco[t][i] = Otb_B_Samp[sample][t][j]
-      
-      #正規化処理
-      W_reco_sum = fsum(W_reco[c])
-      W_reco_max = max(W_reco[c])
-      W_reco_summax = float(W_reco_sum) / W_reco_max
-      for i in xrange(len(W_in)):
-        W_reco[c][i] = float(float(W_reco[c][i])/W_reco_max) / W_reco_summax
-    
-    #print W_reco
-    
-    ###相互情報量を計算(それぞれの単語とCtとの共起性を見る)
-    MI_Samp2[sample] = Mutual_Info(W_reco,pi)
-    
-    print "sample:",sample," MI:",MI_Samp2[sample]
-    
-    
-  MAX_Samp = MI_Samp2.index(max(MI_Samp2))  #相互情報量が最大のサンプル番号
-  
-  ##ファイル出力
-  fp = open('./data/' + filename + '/' + filename + '_sougo_MI_' + str(iteration) + '.csv', 'w')
-  #fp.write(',Samp,Samp2,tanjyun_log,tanjyun_log2,' +  '\n')
-  for sample in xrange(sample_num):
-      fp.write(str(sample) + ',' + str(MI_Samp2[sample]) + '\n') 
-      #fp.write(str(sample) + ',' + str(MI_Samp[sample]) + ',' + str(MI_Samp2[sample]) + ',' + str(tanjyun_log[sample])  + ',' + str(tanjyun_log2[sample]) + '\n')  #文章ごとに計算
-  fp.close()
-  
-  #  #####↑##発話した文章ごとに相互情報量を計算し、サンプリング結果を選ぶ##↑######
-  
-  #def Language_model_update(iteration):
-  #""#"
-  #  ###推定された場所概念番号を調べる
-  #  L_dd = [0 for c in xrange(L)]
-  #  for t in xrange(len(Ct)):
-  #    for c in xrange(L):
-  #      if Ct[t] == c:
-  #        L_dd[c] = 1
-  #  ##print L_dd #ok
-  #""#"
-  
-  ###↓###単語辞書読み込み書き込み追加############################################
-  LIST = []
-  LIST_plus = []
-  i_best = len(W_index[MAX_Samp])    ##相互情報量上位の単語をどれだけ使うか（len(W_index)：すべて）
-  W_index = W_index[MAX_Samp]
-  hatsuon = [ "" for i in xrange(i_best) ]
-  TANGO = []
-  ##単語辞書の読み込み
-  for line in open('./lang_m/' + lang_init, 'r'):
-      itemList = line[:-1].split('	')
-      LIST = LIST + [line]
-      for j in xrange(len(itemList)):
-          itemList[j] = itemList[j].replace("(", "")
-          itemList[j] = itemList[j].replace(")", "")
-      
-      TANGO = TANGO + [[itemList[1],itemList[2]]]
-      
-      
-  #print TANGO
-  
-  #dd_num = 0
-  ##W_indexの単語を順番に処理していく
-  #for i in xrange(len(W_index)):
-  #  W_index_sj = unicode(W_index[i], encoding='shift_jis')
-  #for i in xrange(L):
-  #  if L_dd[i] == 1:
-  for c in xrange(i_best):    # i_best = len(W_index)
-          #W_index_sj = unicode(MI_best[c][i], encoding='shift_jis')
-          W_index_sj = unicode(W_index[c], encoding='shift_jis')
-          if len(W_index_sj) != 1:  ##１文字は除外
-            #for moji in xrange(len(W_index_sj)):
-            moji = 0
-            while (moji < len(W_index_sj)):
-              flag_moji = 0
-              #print len(W_index_sj),str(W_index_sj),moji,W_index_sj[moji]#,len(unicode(W_index[i], encoding='shift_jis'))
-              
-              for j in xrange(len(TANGO)):
-                if (len(W_index_sj)-2 > moji) and (flag_moji == 0): 
-                  #print TANGO[j],j
-                  #print moji
-                  if (unicode(TANGO[j][0], encoding='shift_jis') == W_index_sj[moji]+"_"+W_index_sj[moji+2]) and (W_index_sj[moji+1] == "_"): 
-                    print moji,j,TANGO[j][0]
-                    hatsuon[c] = hatsuon[c] + TANGO[j][1]
-                    moji = moji + 3
-                    flag_moji = 1
-                    
-              for j in xrange(len(TANGO)):
-                if (len(W_index_sj)-1 > moji) and (flag_moji == 0): 
-                  #print TANGO[j],j
-                  #print moji
-                  if (unicode(TANGO[j][0], encoding='shift_jis') == W_index_sj[moji]+W_index_sj[moji+1]):
-                    print moji,j,TANGO[j][0]
-                    hatsuon[c] = hatsuon[c] + TANGO[j][1]
-                    moji = moji + 2
-                    flag_moji = 1
-                    
-                #print len(W_index_sj),moji
-              for j in xrange(len(TANGO)):
-                if (len(W_index_sj) > moji) and (flag_moji == 0):
-                  #else:
-                  if (unicode(TANGO[j][0], encoding='shift_jis') == W_index_sj[moji]):
-                      print moji,j,TANGO[j][0]
-                      hatsuon[c] = hatsuon[c] + TANGO[j][1]
-                      moji = moji + 1
-                      flag_moji = 1
-            print hatsuon[c]
-          else:
-            print W_index[c] + " (one name)"
-        
-  
-  ##各場所の名前の単語ごとに
-  
-  meishi = u'名詞'
-  meishi = meishi.encode('shift-jis')
-  
-  ##単語辞書ファイル生成
-  fp = open('./data/' + filename + '/web.000s_' + str(iteration) + '.htkdic', 'w')
-  for list in xrange(len(LIST)):
-        fp.write(LIST[list])
-  #fp.write('\n')
-  #for c in xrange(len(W_index)):
-  ##新しい単語を追加
-  #i = 0
-  c = 0
-  #while i < L:
-  #  #if L_dd[i] == 1:
-  for mi in xrange(i_best):    # i_best = len(W_index)
-        if hatsuon[mi] != "":
-            if ((W_index[mi] in LIST_plus) == False):  #同一単語を除外
-              flag_tango = 0
-              for j in xrange(len(TANGO)):
-                if(W_index[mi] == TANGO[j][0]):
-                  flag_tango = -1
-              if flag_tango == 0:
-                LIST_plus = LIST_plus + [W_index[mi]]
-                
-                fp.write(LIST_plus[c] + "+" + meishi +"	[" + LIST_plus[c] + "]	" + hatsuon[mi])
-                fp.write('\n')
-                c = c+1
-  #i = i+1
-  fp.close()
-  
-  ###↑###単語辞書読み込み書き込み追加############################################
-  
-"""
