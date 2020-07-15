@@ -40,13 +40,13 @@
 
  - print_action.py --- The program for placing objects on the table in real iCub (for action generation task)
 
- - print2.py --- 
+ - print2.py --- anothoer `print.py`
 
- - run.sh --- Run './iCub.sh'
+ - run.sh --- Run `./iCub.sh`
 
  - view.sh --- Run yarpview of camera images of both eyes
 
- - world.sh --- Run './print.py'
+ - world.sh --- Run `./print.py`
 
- - world_action.sh --- Run './print_action.py'
+ - world_action.sh --- Run `./print_action.py`
 
