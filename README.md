@@ -4,16 +4,16 @@
 These source codes can be used in both iCub simulator and real iCub.  
 - `/For_Real_iCub/` : The folder for a real iCub robot  
 - `/For_Simulator/` : The folder for iCub simulator  
-- `/learning/` :  Minimal python codes for learning.  
+- `/learning/` :  Minimal python codes of learning in CSL-BGM for quick start.  
 
 
 ### Introduction
 Figure 1: An overview of the cross-situational learning scenario as the focus of this study.
 The robot obtains multimodal information from multiple sensory-channels in a situation and estimates the relationships between words and sensory-channels.  
-<img src="https://github.com/a-taniguchi/CSL-BGM/blob/master/img/abstract.jpg" width="600x">
+<img src="https://github.com/a-taniguchi/CSL-BGM/blob/master/img/abstract.jpg" width="580x">
 
 Figure 2: The procedure for obtaining and processing data.  
-<img src="https://github.com/a-taniguchi/CSL-BGM/blob/master/img/getting_data.jpg" width="600px">
+<img src="https://github.com/a-taniguchi/CSL-BGM/blob/master/img/getting_data.jpg" width="580px">
 
 Figure 3: The graphical model of cross-situational learning for multichannel categorizations and for learning word meaning; the action, position, color, and object categories are represented by a component in Gaussian mixture models (GMMs). A word distribution is related to a category on GMMs. Gray nodes represent observed variables.
 <img src="https://github.com/a-taniguchi/CSL-BGM/blob/master/img/graphicalmodel.jpg" width="520px">
