@@ -1,5 +1,5 @@
 # Cross-Situational Learning with Bayesian Generative Models for Multimodal Category and Word Learning in Robots
-## Cross-Situational Learning with Bayesian Generative Model (CSL-BGM)
+## Cross-Situational Learning with Bayesian Probabilistic Generative Model (CSL-PGM)
 
 These source codes can be used in both iCub simulator and real iCub.  
 - `/For_Real_iCub/` : The folder for a real iCub robot  
